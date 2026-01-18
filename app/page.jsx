@@ -307,6 +307,7 @@ export default function Home() {
         onDeleteAccount={handleDeleteAccount}
         onOpenModal={setIsModalOpen}
         onLogout={handleLogout}
+        onRunWatcher={handleRunWatcher}
         // Chat history props
         chats={chats}
         activeChat={activeChat}

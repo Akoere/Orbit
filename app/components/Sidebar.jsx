@@ -1,5 +1,5 @@
 "use client";
-import { User, LogOut, Plus, X, Trash2, MessageSquare, Bell } from "lucide-react";
+import { User, LogOut, Plus, X, Trash2, MessageSquare, Bell, PlayCircle } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok, FaXTwitter, FaReddit } from "react-icons/fa6";
 import { SiThreads } from "react-icons/si";
 
@@ -13,6 +13,7 @@ export default function Sidebar({
   onDeleteAccount, 
   onOpenModal, 
   onLogout,
+  onRunWatcher, // Test run function
   // Chat history props
   chats = [],
   activeChat,
@@ -82,9 +83,9 @@ export default function Sidebar({
                             e.stopPropagation(); 
                             onDeleteChat?.(chat.id); 
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition p-1"
+                          className="text-gray-400 hover:text-red-500 transition p-1.5 lg:opacity-0 lg:group-hover:opacity-100"
                         >
-                          <X size={12} />
+                          <X size={14} />
                         </button>
                       )}
                     </div>
@@ -136,10 +137,18 @@ export default function Sidebar({
                 )}
                 <button 
                     onClick={() => { onOpenModal(true); setIsOpen(false); }}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition mt-2"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
                 >
                     <Plus size={12}/> Add Account
                 </button>
+                {onRunWatcher && (
+                  <button 
+                      onClick={() => { onRunWatcher(); setIsOpen(false); }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                  >
+                      <PlayCircle size={12}/> Run Now
+                  </button>
+                )}
             </div>
         </div>
 
