@@ -1,7 +1,8 @@
 "use client";
-import { User, LogOut, Plus, X, Trash2, MessageSquare, Bell, PlayCircle } from "lucide-react";
+import { User, LogOut, Plus, X, Trash2, MessageSquare, Bell, PlayCircle, ChevronDown } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok, FaXTwitter, FaReddit } from "react-icons/fa6";
 import { SiThreads } from "react-icons/si";
+import { useState } from "react";
 
 export default function Sidebar({ 
   user, 
@@ -21,6 +22,16 @@ export default function Sidebar({
   onSwitchChat,
   onDeleteChat
 }) {
+  
+  const [collapsed, setCollapsed] = useState({
+    chats: false,
+    platforms: false,
+    watchlist: false
+  });
+  
+  const toggleSection = (section) => {
+    setCollapsed(prev => ({ ...prev, [section]: !prev[section] }));
+  };
   
   const getUserName = () => user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Guest";
 
@@ -63,45 +74,61 @@ export default function Sidebar({
             {/* CHAT HISTORY */}
             {chats.length > 0 && (
               <div>
-                <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 px-2">Recent Chats</h3>
-                <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                  {chats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      onClick={() => { onSwitchChat?.(chat.id); setIsOpen(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group cursor-pointer ${
-                        activeChat === chat.id 
-                          ? "bg-gray-200 text-gray-900" 
-                          : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                    >
-                      <MessageSquare size={14} className="text-gray-400 shrink-0" />
-                      <span className="flex-1 truncate text-left">{chat.title}</span>
-                      {chats.length > 1 && (
-                        <button
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            onDeleteChat?.(chat.id); 
-                          }}
-                          className="text-gray-400 hover:text-red-500 transition p-1.5 lg:opacity-0 lg:group-hover:opacity-100"
-                        >
-                          <X size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <button 
+                  onClick={() => toggleSection('chats')}
+                  className="w-full flex items-center justify-between text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 px-2 hover:text-gray-600 transition"
+                >
+                  <span>Recent Chats</span>
+                  <ChevronDown size={12} className={`transition-transform ${collapsed.chats ? '' : 'rotate-180'}`} />
+                </button>
+                {!collapsed.chats && (
+                  <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                    {chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        onClick={() => { onSwitchChat?.(chat.id); setIsOpen(false); }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all group cursor-pointer ${
+                          activeChat === chat.id 
+                            ? "bg-gray-200 text-gray-900" 
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        <MessageSquare size={14} className="text-gray-400 shrink-0" />
+                        <span className="flex-1 truncate text-left">{chat.title}</span>
+                        {chats.length > 1 && (
+                          <button
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              onDeleteChat?.(chat.id); 
+                            }}
+                            className="text-gray-400 hover:text-red-500 transition p-1.5 lg:opacity-0 lg:group-hover:opacity-100"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* PLATFORM NAVIGATION */}
             <div>
-                <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 px-2">Platforms</h3>
-                <div className="space-y-1">
-                    <PlatformButton active={activePlatform === "X"} onClick={() => setActivePlatform("X")} icon={<FaXTwitter size={14} />} label="X (Twitter)" />
-                    <PlatformButton active={activePlatform === "Reddit"} onClick={() => setActivePlatform("Reddit")} icon={<FaReddit size={14} />} label="Reddit" />
-                    <PlatformButton active={activePlatform === "YouTube"} onClick={() => setActivePlatform("YouTube")} icon={<FaYoutube size={14} />} label="YouTube" />
-                </div>
+                <button 
+                  onClick={() => toggleSection('platforms')}
+                  className="w-full flex items-center justify-between text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-2 px-2 hover:text-gray-600 transition"
+                >
+                  <span>Platforms</span>
+                  <ChevronDown size={12} className={`transition-transform ${collapsed.platforms ? '' : 'rotate-180'}`} />
+                </button>
+                {!collapsed.platforms && (
+                  <div className="space-y-1">
+                      <PlatformButton active={activePlatform === "X"} onClick={() => setActivePlatform("X")} icon={<FaXTwitter size={14} />} label="X (Twitter)" />
+                      <PlatformButton active={activePlatform === "Reddit"} onClick={() => setActivePlatform("Reddit")} icon={<FaReddit size={14} />} label="Reddit" />
+                      <PlatformButton active={activePlatform === "YouTube"} onClick={() => setActivePlatform("YouTube")} icon={<FaYoutube size={14} />} label="YouTube" />
+                  </div>
+                )}
             </div>
 
             <div>
@@ -115,41 +142,49 @@ export default function Sidebar({
 
         {/* MOBILE WATCHLIST (Tucked at Bottom) */}
         <div className="lg:hidden mt-4 pt-4 border-t border-gray-200">
-            <h3 className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3 px-2">Your Watchlist</h3>
-            <div className="space-y-2 max-h-[120px] overflow-y-auto">
-                {watchlist.length === 0 ? (
-                  <p className="px-2 text-xs text-gray-400 italic">No accounts tracked.</p>
-                ) : (
-                   watchlist.slice(0, 4).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between px-2 py-2 text-sm text-gray-600 group">
-                          <div className="flex items-center gap-2 truncate flex-1 min-w-0">
-                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
-                             <span className="truncate">{item.display_name || item.handle}</span>
-                          </div>
-                          <button 
-                             onClick={() => onDeleteAccount(item.id)} 
-                             className="text-gray-400 hover:text-red-500 p-2 -mr-2 shrink-0 transition"
-                          >
-                             <X size={16}/>
-                          </button>
-                      </div>
-                   ))
-                )}
-                <button 
-                    onClick={() => { onOpenModal(true); setIsOpen(false); }}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
-                >
-                    <Plus size={12}/> Add Account
-                </button>
-                {onRunWatcher && (
+            <button 
+              onClick={() => toggleSection('watchlist')}
+              className="w-full flex items-center justify-between text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3 px-2 hover:text-gray-600 transition"
+            >
+              <span>Your Watchlist</span>
+              <ChevronDown size={12} className={`transition-transform ${collapsed.watchlist ? '' : 'rotate-180'}`} />
+            </button>
+            {!collapsed.watchlist && (
+              <div className="space-y-2 max-h-[120px] overflow-y-auto">
+                  {watchlist.length === 0 ? (
+                    <p className="px-2 text-xs text-gray-400 italic">No accounts tracked.</p>
+                  ) : (
+                     watchlist.slice(0, 4).map((item) => (
+                        <div key={item.id} className="flex items-center justify-between px-2 py-2 text-sm text-gray-600 group">
+                            <div className="flex items-center gap-2 truncate flex-1 min-w-0">
+                               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
+                               <span className="truncate">{item.display_name || item.handle}</span>
+                            </div>
+                            <button 
+                               onClick={() => onDeleteAccount(item.id)} 
+                               className="text-gray-400 hover:text-red-500 p-2 -mr-2 shrink-0 transition"
+                            >
+                               <X size={16}/>
+                            </button>
+                        </div>
+                     ))
+                  )}
                   <button 
-                      onClick={() => { onRunWatcher(); setIsOpen(false); }}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                      onClick={() => { onOpenModal(true); setIsOpen(false); }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
                   >
-                      <PlayCircle size={12}/> Run Now
+                      <Plus size={12}/> Add Account
                   </button>
-                )}
-            </div>
+                  {onRunWatcher && (
+                    <button 
+                        onClick={() => { onRunWatcher(); setIsOpen(false); }}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition"
+                    >
+                        <PlayCircle size={12}/> Run Now
+                    </button>
+                  )}
+              </div>
+            )}
         </div>
 
         {/* LOGOUT FOOTER */}
