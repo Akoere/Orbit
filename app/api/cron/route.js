@@ -87,13 +87,10 @@ export async function GET(req) {
                 const instructions = data.result?.timeline?.instructions || [];
                 
                 for (const instruction of instructions) {
-                    // Handle TimelineAddEntries (has entries array)
-                    if (instruction.entries) {
+                    // ONLY handle TimelineAddEntries (regular tweets)
+                    // SKIP TimelinePinEntry (pinned tweets) to get most recent posts
+                    if (instruction.type === 'TimelineAddEntries' && instruction.entries) {
                         entries.push(...instruction.entries);
-                    }
-                    // Handle TimelinePinEntry (has single entry)
-                    if (instruction.entry) {
-                        entries.push(instruction.entry);
                     }
                 }
 
