@@ -279,9 +279,20 @@ export default function Home() {
             <Menu size={24} strokeWidth={2.5}/>
          </button>
          
-         {/* Profile Pic */}
-         <div className="w-8 h-8 bg-linear-to-tr from-blue-600 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white">
-            {getUserName()[0].toUpperCase()}
+         {/* Right side buttons */}
+         <div className="flex items-center gap-2">
+            {/* Notification Button */}
+            <button 
+               onClick={() => setIsNotificationModalOpen(true)} 
+               className="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition relative"
+            >
+               <Bell size={20} strokeWidth={2}/>
+            </button>
+            
+            {/* Profile Pic */}
+            <div className="w-8 h-8 bg-linear-to-tr from-blue-600 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white">
+               {getUserName()[0].toUpperCase()}
+            </div>
          </div>
       </div>
 

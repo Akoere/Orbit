@@ -1,5 +1,5 @@
 "use client";
-import { User, LogOut, Plus, X, Trash2, MessageSquare } from "lucide-react";
+import { User, LogOut, Plus, X, Trash2, MessageSquare, Bell } from "lucide-react";
 import { FaFacebook, FaInstagram, FaLinkedin, FaYoutube, FaTiktok, FaXTwitter, FaReddit } from "react-icons/fa6";
 import { SiThreads } from "react-icons/si";
 
@@ -120,12 +120,17 @@ export default function Sidebar({
                   <p className="px-2 text-xs text-gray-400 italic">No accounts tracked.</p>
                 ) : (
                    watchlist.slice(0, 4).map((item) => (
-                      <div key={item.id} className="flex items-center justify-between px-2 py-1 text-sm text-gray-600 group">
-                          <div className="flex items-center gap-2 truncate">
+                      <div key={item.id} className="flex items-center justify-between px-2 py-2 text-sm text-gray-600 group">
+                          <div className="flex items-center gap-2 truncate flex-1 min-w-0">
                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
-                             {item.handle}
+                             <span className="truncate">{item.display_name || item.handle}</span>
                           </div>
-                          <button onClick={() => onDeleteAccount(item.id)} className="text-gray-300 hover:text-red-500"><X size={12}/></button>
+                          <button 
+                             onClick={() => onDeleteAccount(item.id)} 
+                             className="text-gray-400 hover:text-red-500 p-2 -mr-2 shrink-0 transition"
+                          >
+                             <X size={16}/>
+                          </button>
                       </div>
                    ))
                 )}
