@@ -8,12 +8,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(req) {
   try {
     // 1. SAFETY CHECK: THE SKIPPER
-    // RapidAPI Free Limit = 500 reqs/month.
-    // Hourly runs = 720 reqs/month.
-    // We must randomly skip ~30% of runs to stay free (Target: ~480 reqs).
-    // If you pay for a plan, remove this block.
+    // (You can keep this or remove it. It saves Vercel server time, not just API credits).
     if (Math.random() < 0.35) {
-        return NextResponse.json({ success: true, message: "Skipped to save API credits (Free Tier Mode)" });
+        return NextResponse.json({ success: true, message: "Skipped to save resources (Free Tier Mode)" });
     }
 
     // 2. FETCH WATCHLIST
@@ -24,19 +21,25 @@ export async function GET(req) {
     const updates = {}; 
 
     // =========================================================
-    // STEP A: TWITTER/X via RapidAPI (Single User Rotation)
+    // STEP A: TWITTER/X via RapidAPI (DISABLED FOR NOW)
     // =========================================================
     const twitterItems = watchlist.filter(i => i.platform === 'X' || i.platform === 'Twitter');
 
-    // We check ONLY 1 random user per run to save credits.
-    const luckyWinner = twitterItems[Math.floor(Math.random() * twitterItems.length)];
+    // 🛑 MODIFICATION: Force winner to null to save credits
+    const luckyWinner = null; 
+    
+    // Log that we are skipping it
+    if (twitterItems.length > 0) {
+        results.push("ℹ️ Twitter: Skipped (Out of credits for the month)");
+    }
 
+    // This block is now skipped automatically because luckyWinner is null
     if (luckyWinner && process.env.RAPIDAPI_KEY) {
         const cleanHandle = luckyWinner.handle.replace(/[@\s]/g, '').trim();
         console.log(`[RapidAPI] Checking 1 lucky winner: @${cleanHandle}`);
 
         try {
-            // Step 1: Get user ID from username (API requires numeric ID)
+            // Step 1: Get user ID from username
             const userLookupUrl = `https://twitter241.p.rapidapi.com/user?username=${cleanHandle}`;
             
             const userRes = await fetch(userLookupUrl, {
@@ -54,19 +57,16 @@ export async function GET(req) {
 
             const userData = await userRes.json();
             const userId = userData.result?.data?.user?.result?.rest_id || 
-                          userData.result?.rest_id || 
-                          userData.data?.user?.id ||
-                          userData.id;
+                           userData.result?.rest_id || 
+                           userData.data?.user?.id ||
+                           userData.id;
             
             if (!userId) {
                 console.error(`[RapidAPI] Could not find user ID for @${cleanHandle}`);
-                console.log(`[RapidAPI] User response:`, JSON.stringify(userData).substring(0, 300));
                 return;
             }
 
-            console.log(`[RapidAPI] Found user ID: ${userId} for @${cleanHandle}`);
-
-            // Step 2: Get user tweets with the numeric ID
+            // Step 2: Get user tweets
             const tweetsUrl = `https://twitter241.p.rapidapi.com/user-tweets?user=${userId}&count=2`;
             
             const res = await fetch(tweetsUrl, {
@@ -79,28 +79,19 @@ export async function GET(req) {
 
             if (res.ok) {
                 const data = await res.json();
-                console.log(`[RapidAPI] Tweets response:`, JSON.stringify(data).substring(0, 500));
-                
-                // Navigate the Twitter API response structure
-                // Structure: result.timeline.instructions[].entries[] or instruction.entry
                 let entries = [];
                 const instructions = data.result?.timeline?.instructions || [];
                 
                 for (const instruction of instructions) {
-                    // ONLY handle TimelineAddEntries (regular tweets)
-                    // SKIP TimelinePinEntry (pinned tweets) to get most recent posts
                     if (instruction.type === 'TimelineAddEntries' && instruction.entries) {
                         entries.push(...instruction.entries);
                     }
                 }
 
-                // Filter to only tweet entries (not cursors or promotions)
                 const tweetEntries = entries.filter(e => 
                     e.entryId?.startsWith('tweet-') || 
                     e.content?.itemContent?.tweet_results
                 );
-                
-                console.log(`[RapidAPI] Found ${tweetEntries.length} tweet entries for @${cleanHandle}`);
 
                 if (tweetEntries.length > 0) {
                     const topEntry = tweetEntries[0];
@@ -109,7 +100,7 @@ export async function GET(req) {
                     const tweetText = topTweet.legacy?.full_text || topTweet.text || '';
 
                     if (tweetId && luckyWinner.last_tweet_id !== tweetId) {
-                         updates[luckyWinner.id] = {
+                          updates[luckyWinner.id] = {
                             id: tweetId,
                             text: tweetText,
                             link: `https://x.com/${cleanHandle}/status/${tweetId}`,
@@ -117,24 +108,16 @@ export async function GET(req) {
                             handle: luckyWinner.handle,
                             user_id: luckyWinner.user_id,
                             last_tweet_id: luckyWinner.last_tweet_id
-                         };
-                         console.log(`[RapidAPI] ✅ Found update for @${cleanHandle}: "${tweetText.substring(0, 50)}..."`);
+                          };
+                          console.log(`[RapidAPI] ✅ Found update for @${cleanHandle}`);
                     } else {
-                         results.push(`⏭️ @${cleanHandle}: No new updates`);
+                          results.push(`⏭️ @${cleanHandle}: No new updates`);
                     }
-                } else {
-                    console.log(`[RapidAPI] No tweets found in response for @${cleanHandle}`);
                 }
-            } else {
-                const errorText = await res.text();
-                console.error(`[RapidAPI] Tweets error ${res.status}: ${errorText.substring(0, 200)}`);
-                if (res.status === 429) results.push(`❌ Rate Limit Hit`);
             }
         } catch (e) {
             console.error(`[RapidAPI] Failed: ${e.message}`);
         }
-    } else if (twitterItems.length > 0 && !process.env.RAPIDAPI_KEY) {
-        results.push(`ℹ️ Twitter: RAPIDAPI_KEY not configured`);
     }
 
     // =========================================================
@@ -206,7 +189,6 @@ export async function GET(req) {
                 if (res.ok) {
                     const xml = await res.text();
                     
-                    // Extract channel name from RSS feed
                     const channelNameMatch = xml.match(/<author>.*?<name>(.*?)<\/name>/s);
                     const channelName = channelNameMatch ? channelNameMatch[1] : channelId;
                     
@@ -222,11 +204,11 @@ export async function GET(req) {
                                 text: titleMatch[1],
                                 link: `https://youtube.com/watch?v=${videoId}`,
                                 platform: 'YouTube',
-                                handle: channelName, // Use channel name instead of ID
+                                handle: channelName,
                                 user_id: item.user_id,
                                 last_tweet_id: item.last_tweet_id
                             };
-                            console.log(`[YouTube] ✅ Found update from ${channelName}: "${titleMatch[1].substring(0, 30)}..."`);
+                            console.log(`[YouTube] ✅ Found update from ${channelName}`);
                         } else {
                             results.push(`⏭️ ${channelName}: No new updates`);
                         }
